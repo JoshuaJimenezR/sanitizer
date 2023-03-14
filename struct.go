@@ -118,7 +118,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 	}
 
 	//Sanitize uri
-	if strings.Contains(tagValue, "url") {
+	if strings.Contains(tagValue, "uri") {
 		fieldValue = URI(field.Name)
 
 		if st.verbose {
@@ -128,7 +128,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 	}
 
 	// Sanitize Alpha with spaces
-	if strings.Contains(tagValue, "alphaSpaces") {
+	if strings.Contains(tagValue, "alpha") {
 		fieldValue = Alpha(field.Name, true)
 
 		if st.verbose {
@@ -146,6 +146,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
+
 	// Assign value to field
 	v.Field(i).Set(reflect.ValueOf(fieldValue))
 }

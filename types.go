@@ -111,8 +111,7 @@ func XML(original string) string {
 
 // XSS protection against xss attacks
 func XSS(original string) string {
-	original = strings.Replace(original, "<script", "", -1)
-	original = strings.Replace(original, "script>", "", -1)
+	original = Scripts(original)
 	original = strings.Replace(original, "eval(", "", -1)
 	original = strings.Replace(original, "eval&#40;", "", -1)
 	original = strings.Replace(original, "javascript:", "", -1)
