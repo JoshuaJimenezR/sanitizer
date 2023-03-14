@@ -1,56 +1,56 @@
 package sanitizer
 
 type StringSanitizer struct {
-	html       bool
-	htmlEscape bool
-	xss        bool
+	Alpha        bool
+	AlphaNumeric bool
+	Domain       bool
+	HTML         bool
+	HTMLEscape   bool
+	URI          bool
+	URL          bool
+	XML          bool
+	XSS          bool
 }
 
-var (
-	DefaultSanitizer = &StringSanitizer{
-		html:       true,
-		htmlEscape: true,
-		xss:        true,
+func StringWithOptions(original string, sanitizer StringSanitizer) string {
+	if sanitizer.Alpha {
+		original = Alpha(original, true)
 	}
-)
 
-func String() *StringSanitizer {
-	return DefaultSanitizer
-}
+	if sanitizer.AlphaNumeric {
+		original = AlphaNumeric(original, true)
+	}
 
-func (st *StringSanitizer) Plain(original string) string {
-	if st.html {
+	if sanitizer.Domain {
+		original, _ = Domain(original, true, true)
+	}
+
+	if sanitizer.HTML {
 		original = HTML(original)
 	}
 
-	if st.htmlEscape {
+	if sanitizer.HTMLEscape {
 		original = HtmlEscape(original)
 	}
 
-	if st.xss {
+	if sanitizer.XSS {
 		original = XSS(original)
 	}
 
 	return original
 }
 
-func (st *StringSanitizer) Domain(original string, preserveCase, removeWww bool) (string, error) {
-	original = st.Plain(original)
-
-	return Domain(original, preserveCase, removeWww)
-}
-
-func (st *StringSanitizer) SliceOfStr(original []string) []string {
+func SliceOfStr(original []string, sanitizer StringSanitizer) []string {
 	for i := 0; i < len(original); i++ {
-		original[i] = st.Plain(original[i])
+		original[i] = StringWithOptions(original[i], sanitizer)
 	}
 
 	return original
 }
 
-func (st *StringSanitizer) MapOfStr(original map[interface{}]string) map[interface{}]string {
+func MapOfStr(original map[interface{}]string, sanitizer StringSanitizer) map[interface{}]string {
 	for _, v := range original {
-		v = st.Plain(v)
+		v = StringWithOptions(v, sanitizer)
 	}
 	return original
 }

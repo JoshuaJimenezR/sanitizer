@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Regular Expression rules
 var (
 	alphaNumericRegExp           = regexp.MustCompile(`[^a-zA-Z0-9]`) // Alpha numeric
 	alphaNumericWithSpacesRegExp = regexp.MustCompile(`[^a-zA-Z0-9\s]`)
@@ -22,6 +23,7 @@ var (
 
 var emptySpace = []byte("")
 
+// Alpha converts string to Alpha characters only
 func Alpha(original string, spaces bool) string {
 	// Leave white spaces?
 	if spaces {
@@ -32,6 +34,7 @@ func Alpha(original string, spaces bool) string {
 	return string(alphaRegExp.ReplaceAll([]byte(original), emptySpace))
 }
 
+// AlphaNumeric converts string to AlphaNumerics characters only
 func AlphaNumeric(original string, spaces bool) string {
 
 	// Leave white spaces?
@@ -43,6 +46,7 @@ func AlphaNumeric(original string, spaces bool) string {
 	return string(alphaNumericRegExp.ReplaceAll([]byte(original), emptySpace))
 }
 
+// Domain checks if domain is valid and removes unnecessary characters
 func Domain(original string, preserveCase bool, removeWww bool) (string, error) {
 
 	// Try to see if we have a host
@@ -75,30 +79,37 @@ func Domain(original string, preserveCase bool, removeWww bool) (string, error) 
 	return string(domainRegExp.ReplaceAll([]byte(strings.ToLower(u.Host)), emptySpace)), nil
 }
 
+// HTML Removes html/xml tags
 func HTML(original string) string {
 	return string(htmlRegExp.ReplaceAll([]byte(original), emptySpace))
 }
 
+// HtmlEscape escapes html characters
 func HtmlEscape(original string) string {
 	return html.EscapeString(original)
 }
 
+// Scripts removes scripts tags from string
 func Scripts(original string) string {
 	return string(scriptRegExp.ReplaceAll([]byte(original), emptySpace))
 }
 
+// URI removes unnecessary characters from URI
 func URI(original string) string {
 	return string(uriRegExp.ReplaceAll([]byte(original), emptySpace))
 }
 
+// URL removes unnecessary characters from URL
 func URL(original string) string {
 	return string(urlRegExp.ReplaceAll([]byte(original), emptySpace))
 }
 
+// XML Removes xml tags
 func XML(original string) string {
 	return HTML(original)
 }
 
+// XSS protection against xss attacks
 func XSS(original string) string {
 	original = strings.Replace(original, "<script", "", -1)
 	original = strings.Replace(original, "script>", "", -1)
