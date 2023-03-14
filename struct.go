@@ -67,16 +67,6 @@ func (st *StructSanitizer) readStruct(v reflect.Value) {
 func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i int, field reflect.StructField) {
 	fieldValue := fmt.Sprintf("%v", reflect.ValueOf(v.Field(i)))
 
-	//Sanitize XSS
-	if strings.Contains(tagValue, "xss") {
-		fieldValue = XSS(fieldValue)
-
-		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", fieldValue)
-		}
-	}
-
 	//Sanitize Html
 	if strings.Contains(tagValue, "html") {
 		fieldValue = HTML(fieldValue)
@@ -90,6 +80,16 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 	//Escape Html
 	if strings.Contains(tagValue, "html_escape") {
 		fieldValue = HtmlEscape(fieldValue)
+
+		if st.verbose {
+			fmt.Printf("Field Name: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
+		}
+	}
+
+	//Sanitize scripts
+	if strings.Contains(tagValue, "scripts") {
+		fieldValue = Scripts(fieldValue)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
@@ -127,16 +127,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	//Sanitize Alpha with no spaces
-	if strings.Contains(tagValue, "alpha") {
-		fieldValue = Alpha(field.Name, false)
-
-		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", fieldValue)
-		}
-	}
-
 	// Sanitize Alpha with spaces
 	if strings.Contains(tagValue, "alphaSpaces") {
 		fieldValue = Alpha(field.Name, true)
@@ -147,6 +137,15 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
+	//Sanitize XSS
+	if strings.Contains(tagValue, "xss") {
+		fieldValue = XSS(fieldValue)
+
+		if st.verbose {
+			fmt.Printf("Field Name: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
+		}
+	}
 	// Assign value to field
 	v.Field(i).Set(reflect.ValueOf(fieldValue))
 }
