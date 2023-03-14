@@ -23,7 +23,8 @@ func Struct(tagName string, any interface{}, verbose bool) {
 func (st *StructSanitizer) SanitizeStruct(v interface{}) {
 	valueOf := reflect.ValueOf(v)
 
-	if valueOf.Kind() != reflect.Struct {
+	if valueOf.Kind() != reflect.Pointer {
+		fmt.Println("error struct needs to be a pointer")
 		return
 	}
 
@@ -40,15 +41,21 @@ func (st *StructSanitizer) readStruct(v reflect.Value) {
 	}
 
 	for i := 0; i < numValues; i++ {
+		// Get the field
 		field := t.Field(i)
+
+		// Get the tag value
 		tagValue := field.Tag.Get(st.tagName)
 
-		//We need to include more data types
+		// Check the data type
 		switch field.Type.Kind() {
 		case reflect.Struct:
 			st.readStruct(v.Field(i))
 		case reflect.String:
-			st.sanitizeFields(tagValue, v, i, field)
+			//Sanitize strings
+			if tagValue != "" {
+				st.sanitizeFields(tagValue, v, i, field)
+			}
 		default:
 			return
 		}
@@ -62,11 +69,13 @@ func (st *StructSanitizer) readStruct(v reflect.Value) {
 
 func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i int, field reflect.StructField) {
 	//Sanitize XSS
-	v.Field(i).Set(reflect.ValueOf(XSS(field.Name)))
+	if strings.Contains(tagValue, "xss") {
+		v.Field(i).Set(reflect.ValueOf(XSS(field.Name)))
 
-	if st.verbose {
-		fmt.Printf("Field Name: %s\n", field.Name)
-		fmt.Printf("Sanitized: %s\n", field.Name)
+		if st.verbose {
+			fmt.Printf("Field Name: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", field.Name)
+		}
 	}
 
 	//Sanitize Html
