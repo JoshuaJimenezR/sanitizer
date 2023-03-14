@@ -59,116 +59,94 @@ func (st *StructSanitizer) readStruct(v reflect.Value) {
 		default:
 			return
 		}
-
 	}
-
-	fmt.Printf("%+v", v)
 
 	return
 }
 
 func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i int, field reflect.StructField) {
+	fieldValue := fmt.Sprintf("%v", reflect.ValueOf(v.Field(i)))
+
 	//Sanitize XSS
 	if strings.Contains(tagValue, "xss") {
-		fmt.Printf("Before Sanitized: %s\n", reflect.ValueOf(field))
+		fieldValue = XSS(fieldValue)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", reflect.ValueOf(field))
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
 	//Sanitize Html
 	if strings.Contains(tagValue, "html") {
-		//v.Field(i).Set(reflect.ValueOf(HTML(field.Name)))
+		fieldValue = HTML(fieldValue)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
-	//Sanitize Html
+	//Escape Html
 	if strings.Contains(tagValue, "html_escape") {
-		//v.Field(i).Set(reflect.ValueOf(HtmlEscape(field.Name)))
+		fieldValue = HtmlEscape(fieldValue)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
 	//Sanitize domain
 	if strings.Contains(tagValue, "domain") {
-		//domain, _ := Domain(field.Name, false, false)
-		//v.Field(i).Set(reflect.ValueOf(domain))
+		fieldValue, _ = Domain(field.Name, false, false)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
 	//Sanitize url
 	if strings.Contains(tagValue, "url") {
-		//v.Field(i).Set(reflect.ValueOf(URL(field.Name)))
+		fieldValue = URL(field.Name)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
 	//Sanitize uri
 	if strings.Contains(tagValue, "url") {
-		//v.Field(i).Set(reflect.ValueOf(URI(field.Name)))
+		fieldValue = URI(field.Name)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
-		}
-	}
-
-	//Sanitize domain
-	if strings.Contains(tagValue, "domainCase") {
-		//domain, _ := Domain(field.Name, true, false)
-		//v.Field(i).Set(reflect.ValueOf(domain))
-
-		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
-		}
-	}
-
-	//Sanitize domain
-	if strings.Contains(tagValue, "domainWww") {
-		//domain, _ := Domain(field.Name, false, true)
-		//v.Field(i).Set(reflect.ValueOf(domain))
-
-		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
 	//Sanitize Alpha with no spaces
 	if strings.Contains(tagValue, "alpha") {
-		//v.Field(i).Set(reflect.ValueOf(Alpha(field.Name, false)))
+		fieldValue = Alpha(field.Name, false)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
 	// Sanitize Alpha with spaces
 	if strings.Contains(tagValue, "alphaSpaces") {
-		//v.Field(i).Set(reflect.ValueOf(Alpha(field.Name, true)))
+		fieldValue = Alpha(field.Name, true)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
-			fmt.Printf("Sanitized: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
 
+	// Assign value to field
+	v.Field(i).Set(reflect.ValueOf(fieldValue))
 }
