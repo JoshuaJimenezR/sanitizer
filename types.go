@@ -121,5 +121,6 @@ func XSS(original string) string {
 	original = strings.Replace(original, "&#60;", "", -1)
 	original = strings.Replace(original, "&lt;", "", -1)
 	original = strings.Replace(original, "&rt;", "", -1)
+	original = HTML(original)
 	return original
 }
