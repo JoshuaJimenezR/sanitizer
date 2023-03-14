@@ -11,7 +11,7 @@ type StructSanitizer struct {
 	tagName string
 }
 
-func Struct(tagName string, any any, verbose bool) {
+func Struct(tagName string, any interface{}, verbose bool) {
 	ret := StructSanitizer{
 		verbose: verbose,
 		tagName: tagName,
