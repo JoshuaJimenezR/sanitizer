@@ -62,6 +62,9 @@ func Domain(input string, removeWww bool) (string, error) {
 		return input, nil
 	}
 
+	//  Sanitize xss
+	input = XSS(input)
+
 	// Missing http?
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 		input = "https://" + strings.TrimSpace(input)
@@ -94,11 +97,8 @@ func Domain(input string, removeWww bool) (string, error) {
 	// Reconstruct the URL
 	urlStr := u.String()
 
-	//  Sanitize xss
-	xssStr := XSS(urlStr)
-
 	// Sanitized
-	sanitizedUrl := domainRegex.ReplaceAllString(strings.ToLower(xssStr), emptySpace)
+	sanitizedUrl := domainRegex.ReplaceAllString(strings.ToLower(urlStr), emptySpace)
 
 	// Checks if the sanitized struct matches the regex
 	if !urlRegex.MatchString(sanitizedUrl) {
