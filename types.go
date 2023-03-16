@@ -12,14 +12,15 @@ import (
 
 // Regular Expression rules
 var (
-	alphaRegex                  = regexp.MustCompile("[^a-zA-Z]+")         // alpha characters
-	alphaWithSpacesRegex        = regexp.MustCompile("[^a-zA-Z ]+")        // alpha characters with spaces
-	alphaNumericRegex           = regexp.MustCompile("[^a-zA-Z0-9]+")      // alphanumeric characters
-	alphaNumericWithSpacesRegex = regexp.MustCompile("[^a-zA-Z0-9 ]+")     // alphanumeric characters with spaces
-	domainRegex                 = regexp.MustCompile(`[^a-zA-Z0-9-.]`)     // domain accepted characters
-	htmlRegex                   = regexp.MustCompile(`<[^>]*>`)            // html/xml tags or any alligator open/close tags
-	urlRegex                    = regexp.MustCompile(`[^a-zA-Z0-9_\-./:]`) // utl allowed characters
-	wwwRegex                    = regexp.MustCompile(`(?i)www.`)           // For removing www
+	alphaRegex                  = regexp.MustCompile("[^a-zA-Z]+")     // alpha characters
+	alphaWithSpacesRegex        = regexp.MustCompile("[^a-zA-Z ]+")    // alpha characters with spaces
+	alphaNumericRegex           = regexp.MustCompile("[^a-zA-Z0-9]+")  // alphanumeric characters
+	alphaNumericWithSpacesRegex = regexp.MustCompile("[^a-zA-Z0-9 ]+") // alphanumeric characters with spaces
+	domainRegex                 = regexp.MustCompile(`[^a-zA-Z0-9-.]`) // domain accepted characters
+	htmlRegex                   = regexp.MustCompile(`<[^>]*>`)        // html/xml tags or any alligator open/close tags
+	wwwRegex                    = regexp.MustCompile(`(?i)www.`)       // removing www
+
+	urlRegex = regexp.MustCompile(`^(?:(https?|ftp):\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^<>]*)?(?:\?[^<>]*)?(?:#[^<>]*)?(?:(?!<script\b)[^<>])*$`) // url allowed characters and prevent attacks
 
 	uriRegex = regexp.MustCompile(`[^:/?#\[\]@!$&'()*+,;=a-zA-Z0-9_~.%-]+`) // uri allowed characters
 
