@@ -24,7 +24,7 @@ var (
 
 	uriRegex = regexp.MustCompile(`[^:/?#\[\]@!$&'()*+,;=a-zA-Z0-9_~.%-]+`) // uri allowed characters
 
-	xssRegex = regexp.MustCompile(`(?i)<(script|iframe|embed|object|style|form|a)[\S\s]*?>[\S\s]*?</1>|<(object)[^>]*?>`) // Harmful html tags
+	scriptsRegex = regexp.MustCompile(`(?i)<(script|embed|object)[\S\s]*?>[\S\s]*?</(script|embed|object)>`) // Harmful html tags
 
 	harmfulRegex = regexp.MustCompile(`(?i)\b(eval|fromCharCode|expression)\s*\(`) // javaScript functions we want to remove
 )
@@ -120,7 +120,7 @@ func HtmlEscape(input string) string {
 
 // Scripts removes scripts tags from string
 func Scripts(input string) string {
-	return xssRegex.ReplaceAllString(input, "")
+	return scriptsRegex.ReplaceAllString(input, "")
 }
 
 // URI removes unnecessary characters from URI
