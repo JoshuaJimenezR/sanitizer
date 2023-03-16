@@ -70,6 +70,10 @@ func (st *StructSanitizer) readStruct(v reflect.Value) error {
 		// Get the tag value
 		tagValue := field.Tag.Get(st.tagName)
 
+		if st.verbose {
+			fmt.Printf("Field Name: %s, Field Value: %s, Field Sanitization Tag: %s \n", field.Name, field.Name, tagValue)
+		}
+
 		// Check the data type
 		switch field.Type.Kind() {
 		case reflect.Struct:
@@ -115,7 +119,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = HTML(fieldValue)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -124,7 +127,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = XML(fieldValue)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -134,7 +136,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = HtmlEscape(fieldValue)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -144,7 +145,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = Scripts(fieldValue)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -159,7 +159,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = domainResp
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -169,7 +168,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = URL(field.Name)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -179,7 +177,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = URI(field.Name)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -189,7 +186,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = Alpha(field.Name, true)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}
@@ -199,7 +195,6 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		fieldValue = XSS(fieldValue)
 
 		if st.verbose {
-			fmt.Printf("Field Name: %s\n", field.Name)
 			fmt.Printf("Sanitized: %s\n", fieldValue)
 		}
 	}

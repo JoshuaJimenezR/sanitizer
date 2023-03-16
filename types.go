@@ -24,7 +24,7 @@ var (
 
 	uriRegex = regexp.MustCompile(`[^:/?#\[\]@!$&'()*+,;=a-zA-Z0-9_~.%-]+`) // uri allowed characters
 
-	scriptsRegex = regexp.MustCompile(`(?i)<(script|embed|object)[\S\s]*?>[\S\s]*?</(script|embed|object)>`) // Harmful html tags
+	scriptsRegex = regexp.MustCompile(`(?i)<(script|embed|object)[\S\s]*?>[\S\s]*?</(script|embed|object)>`) // Harmful script tags
 
 	harmfulRegex = regexp.MustCompile(`(?i)\b(eval|fromCharCode|expression)\s*\(`) // javaScript functions we want to remove
 )
@@ -62,9 +62,6 @@ func Domain(input string, removeWww bool) (string, error) {
 		return input, nil
 	}
 
-	//  Sanitize xss
-	input = XSS(input)
-
 	// Missing http?
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 		input = "https://" + strings.TrimSpace(input)
@@ -97,15 +94,7 @@ func Domain(input string, removeWww bool) (string, error) {
 	// Reconstruct the URL
 	urlStr := u.String()
 
-	// Sanitized
-	sanitizedUrl := domainRegex.ReplaceAllString(strings.ToLower(urlStr), emptySpace)
-
-	// Checks if the sanitized struct matches the regex
-	if !urlRegex.MatchString(sanitizedUrl) {
-		return input, errors.New("invalid URL")
-	}
-
-	return sanitizedUrl, nil
+	return domainRegex.ReplaceAllString(strings.ToLower(urlStr), emptySpace), nil
 }
 
 // HTML Removes html/xml tags
@@ -151,7 +140,6 @@ func XSS(input string) string {
 	input = strings.Replace(input, "&#60;", "", -1)
 	input = strings.Replace(input, "&lt;", "", -1)
 	input = strings.Replace(input, "&rt;", "", -1)
-	input = HTML(input)
 	return input
 }
 
