@@ -100,7 +100,7 @@ func (st *StructSanitizer) readStruct(v reflect.Value) error {
 // checkFields checks if sanitization is possible
 func (st *StructSanitizer) checkFields(tagValue string, v reflect.Value, i int, field reflect.StructField) error {
 	if st.verbose {
-		fmt.Printf("Field Name: %s, Field Value: %s, Field Sanitization Tag: %s \n", field.Name, reflect.ValueOf(field), tagValue)
+		fmt.Printf("Field Name: %s, Field Value: %s, Field Sanitization Tag: %s \n", field.Name, v.Field(i).Interface(), tagValue)
 	}
 
 	//Sanitize strings
