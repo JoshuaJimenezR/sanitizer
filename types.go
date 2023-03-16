@@ -20,7 +20,7 @@ var (
 	htmlRegex                   = regexp.MustCompile(`<[^>]*>`)        // html/xml tags or any alligator open/close tags
 	wwwRegex                    = regexp.MustCompile(`(?i)www.`)       // removing www
 
-	urlRegex = regexp.MustCompile(`^(?:(https?|ftp):\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^<>]*)?(?:\?[^<>]*)?(?:#[^<>]*)?(?:(?!<script\b)[^<>])*$`) // url allowed characters and prevent attacks
+	urlRegex = regexp.MustCompile(`^(?:(https?|ftp):\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^<>]*)?(?:\?[^<>]*)?(?:#[^<>]*)?(?:(!<script\b)[^<>])*$`) // url allowed characters and prevent attacks
 
 	uriRegex = regexp.MustCompile(`[^:/?#\[\]@!$&'()*+,;=a-zA-Z0-9_~.%-]+`) // uri allowed characters
 
@@ -67,7 +67,7 @@ func Domain(input string, removeWww bool) (string, error) {
 		input = "https://" + strings.TrimSpace(input)
 	}
 
-	// Try to parse the url
+	// Try to parse the urlStr
 	u, err := url.Parse(input)
 	if err != nil {
 		return input, errors.New(fmt.Sprintf("invalid URL %v", err))
@@ -92,10 +92,17 @@ func Domain(input string, removeWww bool) (string, error) {
 	u.Path = url.PathEscape(u.Path)
 
 	// Reconstruct the URL
-	output := u.String()
+	urlStr := u.String()
 
-	// Generally all domains should be uniform and lowercase
-	return domainRegex.ReplaceAllString(strings.ToLower(output), emptySpace), nil
+	//Sanitized
+	sanitizedUrl := domainRegex.ReplaceAllString(strings.ToLower(urlStr), emptySpace)
+
+	// Checks if the sanitized struct matches the regex
+	if urlRegex.MatchString(sanitizedUrl) {
+		return input, errors.New(fmt.Sprintf("invalid URL %v", err))
+	}
+
+	return sanitizedUrl, nil
 }
 
 // HTML Removes html/xml tags

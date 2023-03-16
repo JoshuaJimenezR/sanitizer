@@ -1,6 +1,7 @@
 package sanitizer
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -11,34 +12,56 @@ type StructSanitizer struct {
 	tagName string
 }
 
-func Struct(tagName string, any interface{}, verbose bool) {
+// Struct Sanitizes the given struct
+func Struct(tagName string, any interface{}, verbose bool) error {
 	ret := StructSanitizer{
 		verbose: verbose,
 		tagName: tagName,
 	}
 
-	ret.SanitizeStruct(any)
-}
-
-func (st *StructSanitizer) SanitizeStruct(v interface{}) {
-	valueOf := reflect.ValueOf(v)
-
-	if valueOf.Kind() != reflect.Pointer {
-		fmt.Println("error struct needs to be a pointer")
-		return
+	err := ret.SanitizeStruct(any)
+	if err != nil {
+		return err
 	}
 
-	st.readStruct(valueOf.Elem())
+	return nil
 }
 
-func (st *StructSanitizer) readStruct(v reflect.Value) {
-	t := v.Type()
+// SanitizeStruct Checks the given interface
+func (st *StructSanitizer) SanitizeStruct(v interface{}) error {
+	// read value of interface
+	valueOf := reflect.ValueOf(v)
+
+	// check if struct is a pointer
+	if valueOf.Kind() != reflect.Pointer {
+		return errors.New("struct needs to be a pointer")
+	}
+
+	// pointer value
+	value := valueOf.Elem()
+
+	//Check number of fields
+	t := value.Type()
 	numValues := t.NumField()
 
 	// Empty struct
 	if numValues == 0 {
-		return
+		return errors.New("struct is empty")
 	}
+
+	// Read struct
+	err := st.readStruct(value)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// readStruct Recursive Read struct fields
+func (st *StructSanitizer) readStruct(v reflect.Value) error {
+	t := v.Type()
+	numValues := t.NumField()
 
 	for i := 0; i < numValues; i++ {
 		// Get the field
@@ -50,26 +73,55 @@ func (st *StructSanitizer) readStruct(v reflect.Value) {
 		// Check the data type
 		switch field.Type.Kind() {
 		case reflect.Struct:
-			st.readStruct(v.Field(i))
+			err := st.readStruct(v.Field(i))
+			if err != nil {
+				return err
+			}
 		case reflect.String:
-			//Sanitize strings
-			if tagValue != "" {
-				st.sanitizeFields(tagValue, v, i, field)
+			err := st.checkFields(tagValue, v, i, field)
+			if err != nil {
+				return err
 			}
 		default:
-			return
+			return nil
 		}
 	}
 
-	return
+	return nil
 }
 
-func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i int, field reflect.StructField) {
+// checkFields checks if sanitization is possible
+func (st *StructSanitizer) checkFields(tagValue string, v reflect.Value, i int, field reflect.StructField) error {
+	//Sanitize strings
+	if tagValue != "" {
+		fieldValue, err := st.sanitizeFields(tagValue, v, i, field)
+		if err != nil {
+			return err
+		}
+
+		// Assign value to field
+		v.Field(i).Set(reflect.ValueOf(fieldValue))
+	}
+
+	return nil
+}
+
+// sanitizeFields sanitize fields based on the given struct tag(xss, domain, url, uri
+func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i int, field reflect.StructField) (string, error) {
 	fieldValue := fmt.Sprintf("%v", reflect.ValueOf(v.Field(i)))
 
 	//Sanitize Html
 	if strings.Contains(tagValue, "html") {
 		fieldValue = HTML(fieldValue)
+
+		if st.verbose {
+			fmt.Printf("Field Name: %s\n", field.Name)
+			fmt.Printf("Sanitized: %s\n", fieldValue)
+		}
+	}
+
+	if strings.Contains(tagValue, "xml") {
+		fieldValue = XML(fieldValue)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
@@ -99,7 +151,12 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 
 	//Sanitize domain
 	if strings.Contains(tagValue, "domain") {
-		fieldValue, _ = Domain(field.Name, false)
+		domainResp, err := Domain(field.Name, false)
+		if err != nil {
+			return fieldValue, err
+		}
+
+		fieldValue = domainResp
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)
@@ -147,6 +204,5 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	// Assign value to field
-	v.Field(i).Set(reflect.ValueOf(fieldValue))
+	return fieldValue, nil
 }
