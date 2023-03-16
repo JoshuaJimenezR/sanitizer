@@ -94,12 +94,15 @@ func Domain(input string, removeWww bool) (string, error) {
 	// Reconstruct the URL
 	urlStr := u.String()
 
-	//Sanitized
-	sanitizedUrl := domainRegex.ReplaceAllString(strings.ToLower(urlStr), emptySpace)
+	//  Sanitize xss
+	xssStr := XSS(urlStr)
+
+	// Sanitized
+	sanitizedUrl := domainRegex.ReplaceAllString(strings.ToLower(xssStr), emptySpace)
 
 	// Checks if the sanitized struct matches the regex
 	if !urlRegex.MatchString(sanitizedUrl) {
-		return input, errors.New(fmt.Sprintf("invalid URL %v", err))
+		return input, errors.New("invalid URL")
 	}
 
 	return sanitizedUrl, nil
