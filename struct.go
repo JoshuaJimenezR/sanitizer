@@ -99,7 +99,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 
 	//Sanitize domain
 	if strings.Contains(tagValue, "domain") {
-		fieldValue, _ = Domain(field.Name, false, false)
+		fieldValue, _ = Domain(field.Name, false)
 
 		if st.verbose {
 			fmt.Printf("Field Name: %s\n", field.Name)

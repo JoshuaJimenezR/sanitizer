@@ -22,7 +22,7 @@ func StringWithOptions(original string, sanitizer StringSanitizer) string {
 	}
 
 	if sanitizer.Domain {
-		original, _ = Domain(original, true, true)
+		original, _ = Domain(original, true)
 	}
 
 	if sanitizer.HTML {
