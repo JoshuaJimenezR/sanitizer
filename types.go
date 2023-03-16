@@ -130,6 +130,7 @@ func URI(input string) string {
 
 // URL removes unnecessary characters from URL
 func URL(input string) string {
+	input = XSS(input)
 	return urlRegex.ReplaceAllString(input, emptySpace)
 }
 
