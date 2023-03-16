@@ -23,7 +23,7 @@ var (
 
 	uriRegex = regexp.MustCompile(`[^:/?#\[\]@!$&'()*+,;=a-zA-Z0-9_~.%-]+`) // uri allowed characters
 
-	xssRegex = regexp.MustCompile(`(?i)<(script|iframe|embed|object|style|form|a)[\S\s]*?>[\S\s]*?</\1>|<(object)[^>]*?>`) // Harmful html tags
+	xssRegex = regexp.MustCompile(`(?i)<(script|iframe|embed|object|style|form|a)[\S\s]*?>[\S\s]*?</1>|<(object)[^>]*?>`) // Harmful html tags
 
 	harmfulRegex = regexp.MustCompile(`(?i)\b(eval|fromCharCode|expression)\s*\(`) // javaScript functions we want to remove
 )
