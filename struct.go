@@ -158,7 +158,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 
 	//Sanitize domain
 	if strings.Contains(tagValue, "domain") {
-		domainResp, err := Domain(field.Name, false)
+		domainResp, err := Domain(fieldValue, false)
 		if err != nil {
 			return fieldValue, err
 		}
@@ -172,7 +172,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 
 	//Sanitize url
 	if strings.Contains(tagValue, "url") {
-		fieldValue = URL(field.Name)
+		fieldValue = URL(fieldValue)
 
 		if st.verbose {
 			fmt.Printf("Sanitized: %s\n", fieldValue)
@@ -181,7 +181,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 
 	//Sanitize uri
 	if strings.Contains(tagValue, "uri") {
-		fieldValue = URI(field.Name)
+		fieldValue = URI(fieldValue)
 
 		if st.verbose {
 			fmt.Printf("Sanitized: %s\n", fieldValue)
@@ -190,7 +190,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 
 	// Sanitize Alpha with spaces
 	if strings.Contains(tagValue, "alpha") {
-		fieldValue = Alpha(field.Name, true)
+		fieldValue = Alpha(fieldValue, true)
 
 		if st.verbose {
 			fmt.Printf("Sanitized: %s\n", fieldValue)
