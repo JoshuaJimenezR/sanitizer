@@ -28,17 +28,17 @@ func Struct(tagName string, any interface{}, verbose bool) error {
 }
 
 // SanitizeStruct Checks the given interface
-func (st *StructSanitizer) SanitizeStruct(v interface{}) error {
+func (st *StructSanitizer) SanitizeStruct(any interface{}) error {
 	// read value of interface
-	valueOf := reflect.ValueOf(v)
+	v := reflect.ValueOf(any)
 
 	// check if struct is a pointer
-	if valueOf.Kind() != reflect.Pointer {
+	if v.Kind() != reflect.Pointer {
 		return errors.New("struct needs to be a pointer")
 	}
 
 	// pointer value
-	value := valueOf.Elem()
+	value := v.Elem()
 
 	//Check number of fields
 	t := value.Type()
@@ -60,34 +60,37 @@ func (st *StructSanitizer) SanitizeStruct(v interface{}) error {
 
 // readStruct Recursive Read struct fields
 func (st *StructSanitizer) readStruct(v reflect.Value) error {
-	t := v.Type()
-	numValues := t.NumField()
-
-	for i := 0; i < numValues; i++ {
+	for i := 0; i < v.NumField(); i++ {
 		// Get the field
-		field := t.Field(i)
+		field := v.Type().Field(i)
+		tag := field.Tag
 
 		// Get the tag value
-		tagValue := field.Tag.Get(st.tagName)
+		tagValue := tag.Get(st.tagName)
 
-		if st.verbose {
-			fmt.Printf("Field Name: %s, Field Value: %s, Field Sanitization Tag: %s \n", field.Name, field.Name, tagValue)
+		// Check if field is a Pointer
+		if v.Field(i).Kind() == reflect.Ptr {
+			if !v.Field(i).IsNil() {
+				if err := st.readStruct(v.Field(i).Elem()); err != nil {
+					return err
+				}
+			}
+			continue
 		}
 
-		// Check the data type
-		switch field.Type.Kind() {
-		case reflect.Struct:
-			err := st.readStruct(v.Field(i))
-			if err != nil {
+		// Check if field is a Pointer
+		if v.Field(i).Kind() == reflect.Struct {
+			if err := st.readStruct(v.Field(i)); err != nil {
 				return err
 			}
-		case reflect.String:
-			err := st.checkFields(tagValue, v, i, field)
-			if err != nil {
+			continue
+		}
+
+		// Check if field is a string
+		if v.Field(i).Kind() == reflect.String {
+			if err := st.checkFields(tagValue, v, i, field); err != nil {
 				return err
 			}
-		default:
-			return nil
 		}
 	}
 
@@ -96,6 +99,10 @@ func (st *StructSanitizer) readStruct(v reflect.Value) error {
 
 // checkFields checks if sanitization is possible
 func (st *StructSanitizer) checkFields(tagValue string, v reflect.Value, i int, field reflect.StructField) error {
+	if st.verbose {
+		fmt.Printf("Field Name: %s, Field Value: %s, Field Sanitization Tag: %s \n", field.Name, field.Name, tagValue)
+	}
+
 	//Sanitize strings
 	if tagValue != "" {
 		fieldValue, err := st.sanitizeFields(tagValue, v, i, field)
