@@ -98,7 +98,7 @@ func Domain(input string, removeWww bool) (string, error) {
 	sanitizedUrl := domainRegex.ReplaceAllString(strings.ToLower(urlStr), emptySpace)
 
 	// Checks if the sanitized struct matches the regex
-	if urlRegex.MatchString(sanitizedUrl) {
+	if !urlRegex.MatchString(sanitizedUrl) {
 		return input, errors.New(fmt.Sprintf("invalid URL %v", err))
 	}
 
