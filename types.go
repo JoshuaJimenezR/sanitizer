@@ -3,7 +3,6 @@ package sanitizer
 import (
 	"errors"
 	"fmt"
-	"github.com/robertkrimen/otto"
 	"html"
 	"net/url"
 	"regexp"
@@ -119,7 +118,6 @@ func URI(input string) string {
 
 // URL removes unnecessary characters from URL
 func URL(input string) string {
-	input = XSS(input)
 	return urlRegex.ReplaceAllString(input, emptySpace)
 }
 
@@ -141,28 +139,4 @@ func XSS(input string) string {
 	input = strings.Replace(input, "&lt;", "", -1)
 	input = strings.Replace(input, "&rt;", "", -1)
 	return input
-}
-
-// SanitizeJS Takes in a string with js code and runs the code in a virtual machine to check if is harmful
-func SanitizeJS(input string) (string, error) {
-	vm := otto.New()
-
-	// Define a function that we'll use to replace any instances of "eval(",
-	// "fromCharCode(", or "expression(" with an empty string
-	replaceFn := func(s string) string {
-		return ""
-	}
-
-	// Replace any matches of the harmful regex with an empty string
-	input = harmfulRegex.ReplaceAllStringFunc(input, replaceFn)
-
-	// Use otto to evaluate the remaining JavaScript code
-	_, err := vm.Run(input)
-	if err != nil {
-		return emptySpace, errors.New(fmt.Sprintf("Harmful JS code: %v", err))
-	}
-
-	// If the code evaluates successfully, return the sanitized JavaScript string
-	sanitizedJS, _ := vm.Get("JSON.stringify(this)")
-	return sanitizedJS.String(), nil
 }

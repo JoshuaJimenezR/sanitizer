@@ -121,7 +121,7 @@ func (st *StructSanitizer) checkFields(tagValue string, v reflect.Value, i int, 
 func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i int, field reflect.StructField) (string, error) {
 	fieldValue := fmt.Sprintf("%v", reflect.ValueOf(v.Field(i)))
 
-	//Sanitize Html
+	// Sanitize Html
 	if strings.Contains(tagValue, "html") {
 		fieldValue = HTML(fieldValue)
 
@@ -130,6 +130,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
+	// Sanitize xml
 	if strings.Contains(tagValue, "xml") {
 		fieldValue = XML(fieldValue)
 
@@ -138,7 +139,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	//Escape Html
+	// Escape Html
 	if strings.Contains(tagValue, "html_escape") {
 		fieldValue = HtmlEscape(fieldValue)
 
@@ -147,7 +148,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	//Sanitize scripts
+	// Sanitize scripts
 	if strings.Contains(tagValue, "scripts") {
 		fieldValue = Scripts(fieldValue)
 
@@ -156,7 +157,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	//Sanitize domain
+	// Sanitize domain
 	if strings.Contains(tagValue, "domain") {
 		domainResp, err := Domain(fieldValue, false)
 		if err != nil {
@@ -170,7 +171,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	//Sanitize url
+	// Sanitize url
 	if strings.Contains(tagValue, "url") {
 		fieldValue = URL(fieldValue)
 
@@ -179,7 +180,7 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	//Sanitize uri
+	// Sanitize uri
 	if strings.Contains(tagValue, "uri") {
 		fieldValue = URI(fieldValue)
 
@@ -191,6 +192,15 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 	// Sanitize Alpha with spaces
 	if strings.Contains(tagValue, "alpha") {
 		fieldValue = Alpha(fieldValue, true)
+
+		if st.verbose {
+			fmt.Printf("Sanitized: %s\n", fieldValue)
+		}
+	}
+
+	// Sanitize AlphaNumeric with spaces
+	if strings.Contains(tagValue, "alpha") {
+		fieldValue = AlphaNumeric(fieldValue, true)
 
 		if st.verbose {
 			fmt.Printf("Sanitized: %s\n", fieldValue)
