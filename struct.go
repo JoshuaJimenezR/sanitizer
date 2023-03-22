@@ -13,9 +13,9 @@ type StructSanitizer struct {
 }
 
 // Struct Sanitizes the given struct
-func Struct(tagName string, any interface{}, verbose bool) error {
+func Struct(tagName string, any interface{}) error {
 	ret := StructSanitizer{
-		verbose: verbose,
+		verbose: false,
 		tagName: tagName,
 	}
 
@@ -157,23 +157,14 @@ func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i in
 		}
 	}
 
-	// Sanitize domain
-	if strings.Contains(tagValue, "domain") {
-		domainResp, err := Domain(fieldValue, false)
-		if err != nil {
-			return fieldValue, err
-		}
-
-		fieldValue = domainResp
-
-		if st.verbose {
-			fmt.Printf("Sanitized: %s\n", fieldValue)
-		}
-	}
-
 	// Sanitize url
 	if strings.Contains(tagValue, "url") {
-		fieldValue = URL(fieldValue)
+		value, err := URL(fieldValue, true)
+		if err != nil {
+			return "", err
+		}
+
+		fieldValue = value
 
 		if st.verbose {
 			fmt.Printf("Sanitized: %s\n", fieldValue)
