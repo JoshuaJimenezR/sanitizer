@@ -20,4 +20,14 @@ var (
 	// harmfulRegex = regexp.MustCompile(`(?i)\b(eval|fromCharCode|expression)\s*\(`) // javaScript functions we want to remove
 
 	emptySpace = ""
+
+	htmlField         = "html"
+	xmlField          = "xml"
+	htmlEscapeField   = "html_escape"
+	scriptsField      = "scripts"
+	urlField          = "url"
+	uriField          = "uri"
+	alphaField        = "alpha"
+	alphanumericField = "alphanumeric"
+	xssField          = "xss"
 )
