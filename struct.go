@@ -69,8 +69,10 @@ func (st *StructSanitizer) readStruct(v reflect.Value) error {
 
 		// Check if field is a Pointer
 		if v.Field(i).Kind() == reflect.Ptr {
-			if !v.Field(i).IsNil() {
-				if err := st.readStruct(v.Field(i).Elem()); err != nil {
+			element := v.Field(i).Elem()
+
+			if !v.Field(i).IsNil() && element.Kind() == reflect.Struct {
+				if err := st.readStruct(element); err != nil {
 					return err
 				}
 			}
