@@ -1,26 +1,48 @@
 package sanitizer
 
 import (
-	"fmt"
-	"github.com/JoshuaJimenezR/sanitizer/examples"
 	"testing"
 )
 
+type Address struct {
+	StreetAddress1 string `json:"street_address_1" sanitize:"html"`
+	StreetAddress2 string `json:"street_address_2" sanitize:"html"`
+	City           string `json:"city" sanitize:"xml"`
+	State          string `json:"state"`
+	ZipCode        string `json:"zip_code" sanitize:"xss"`
+}
+
+type Payload struct {
+	FirstName string  `json:"first_name" sanitize:"xss"`
+	LastName  string  `json:"last_name" sanitize:"scripts"`
+	Age       int     `json:"age"`
+	Website   string  `json:"website"  sanitize:"url"`
+	Username  string  `json:"username" sanitize:"uri"`
+	Address   Address `json:"address"`
+	Active    *bool   `json:"active"`
+	LockedBy  *uint8  `json:"locked_by"`
+}
+
 func TestStruct(t *testing.T) {
+	var active = true
+	var lockedBy uint8 = 1
+
 	// Payload Example
-	payload := &examples.Payload{
+	payload := &Payload{
 		FirstName: `First <script>$("#something").hide()</script>Name 123`,
 		LastName:  `Last <embed width="50" class="something"></embed>Name`,
 		Age:       30,
 		Website:   "https://domain.com",
 		Username:  "/This/Works/?that=123&this#page10%",
-		Address: examples.Address{
+		Address: Address{
 			StreetAddress1: `<!DOCTYPE html><html lang="en"><head><title>Street Address 1</title><link rel="stylesheet" href="style.css"></head><body><script src="index.js"></script></body></html>`,
 			StreetAddress2: `<!DOCTYPE html><html lang="en"><head><title>Street Address 2</title><link rel="stylesheet" href="style.css"></head><body><script src="index.js"></script></body></html>`,
 			City:           `<CustomTags>City</CustomTags>`,
 			State:          ``,
 			ZipCode:        `SW1W 0NY<script>$("#something").hide()</script>`,
 		},
+		Active:   &active,
+		LockedBy: &lockedBy,
 	}
 
 	type args struct {
@@ -48,7 +70,7 @@ func TestStruct(t *testing.T) {
 			}
 
 			// Check for the First name
-			if payload.FirstName != "First scriptsomethinghidescriptName " {
+			if payload.FirstName != "First Name 123" {
 				t.Errorf("First Name sanitize error = %v", payload.FirstName)
 			}
 
@@ -83,11 +105,11 @@ func TestStruct(t *testing.T) {
 			}
 
 			// Check for Zipcode
-			if payload.Address.ZipCode != "SWW NYscriptsomethinghidescript" {
+			if payload.Address.ZipCode != "SW1W 0NY" {
 				t.Errorf("ZipCode sanitize error = %v", payload.Address.ZipCode)
 			}
 
-			fmt.Printf("%+v", payload)
+			// fmt.Printf("%+v", payload)
 		})
 	}
 }
