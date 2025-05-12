@@ -14,7 +14,7 @@ type StructSanitizer struct {
 // Struct Sanitizes the given struct
 func Struct(tagName string, any interface{}) error {
 	ret := StructSanitizer{
-		verbose: true,
+		verbose: false,
 		tagName: tagName,
 	}
 
