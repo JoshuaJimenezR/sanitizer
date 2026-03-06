@@ -1,7 +1,6 @@
 package sanitizer
 
 import (
-	"errors"
 	"fmt"
 	"html"
 	"net/url"
@@ -61,14 +60,14 @@ func URL(input string, removeWww bool) (string, error) {
 	// Try to parse the urlStr
 	u, err := url.Parse(input)
 	if err != nil {
-		return input, errors.New(fmt.Sprintf("invalid URL %v", err))
+		return input, fmt.Errorf("invalid URL %v", err)
 	}
 
 	if removeWww {
 		u.Host = wwwRegex.ReplaceAllString(u.Host, emptySpace)
 	}
 
-	return urlRegex.ReplaceAllString(input, emptySpace), nil
+	return u.String(), nil
 }
 
 // XML Removes xml tags
@@ -79,15 +78,13 @@ func XML(input string) string {
 // XSS protection against xss attacks
 func XSS(input string) string {
 	input = Scripts(input)
-	input = strings.Replace(input, "eval(", "", -1)
-	input = strings.Replace(input, "eval&#40;", "", -1)
-	input = strings.Replace(input, "javascript:", "", -1)
-	input = strings.Replace(input, "javascript&#58;", "", -1)
-	input = strings.Replace(input, "fromCharCode", "", -1)
+	input = xssEvalRegex.ReplaceAllString(input, "")
+	input = xssJavascriptRegex.ReplaceAllString(input, "")
+	input = xssFromCharCodeRegex.ReplaceAllString(input, "")
 	input = strings.Replace(input, "&#62;", "", -1)
 	input = strings.Replace(input, "&#60;", "", -1)
 	input = strings.Replace(input, "&lt;", "", -1)
-	input = strings.Replace(input, "&rt;", "", -1)
+	input = strings.Replace(input, "&gt;", "", -1) // Fixed html entity greater-than
 	input = HTML(input)
 	return input
 }

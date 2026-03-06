@@ -87,6 +87,14 @@ func (st *StructSanitizer) readStruct(v reflect.Value) error {
 			continue
 		}
 
+		// Check if field is a Slice
+		if v.Field(i).Kind() == reflect.Slice {
+			if err := st.readSlice(v.Field(i), tagValue); err != nil {
+				return err
+			}
+			continue
+		}
+
 		// Check if field is a string
 		if v.Field(i).Kind() == reflect.String {
 			if err := st.checkFields(tagValue, v, i, field); err != nil {
@@ -98,6 +106,39 @@ func (st *StructSanitizer) readStruct(v reflect.Value) error {
 	return nil
 }
 
+// readSlice checks if a slice contains strings or structs to sanitize
+func (st *StructSanitizer) readSlice(v reflect.Value, tagValue string) error {
+	for j := 0; j < v.Len(); j++ {
+		element := v.Index(j)
+
+		if element.Kind() == reflect.Ptr {
+			if !element.IsNil() && element.Elem().Kind() == reflect.Struct {
+				if err := st.readStruct(element.Elem()); err != nil {
+					return err
+				}
+			}
+		} else if element.Kind() == reflect.Struct {
+			if err := st.readStruct(element); err != nil {
+				return err
+			}
+		} else if element.Kind() == reflect.String {
+			if tagValue != "" {
+				if st.verbose {
+					fmt.Printf("Slice Element Sanitization Tag: %s \n", tagValue)
+				}
+				fieldValue, err := st.sanitizeString(tagValue, element.String())
+				if err != nil {
+					return err
+				}
+				if element.CanSet() {
+					element.SetString(fieldValue)
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // checkFields checks if sanitization is possible
 func (st *StructSanitizer) checkFields(tagValue string, v reflect.Value, i int, field reflect.StructField) error {
 	if st.verbose {
@@ -106,7 +147,7 @@ func (st *StructSanitizer) checkFields(tagValue string, v reflect.Value, i int, 
 
 	//Sanitize strings
 	if tagValue != "" {
-		fieldValue, err := st.sanitizeFields(tagValue, v, i, field)
+		fieldValue, err := st.sanitizeString(tagValue, v.Field(i).String())
 		if err != nil {
 			return err
 		}
@@ -118,9 +159,8 @@ func (st *StructSanitizer) checkFields(tagValue string, v reflect.Value, i int, 
 	return nil
 }
 
-// sanitizeFields sanitize fields based on the given struct tag(xss, domain, url, uri
-func (st *StructSanitizer) sanitizeFields(tagValue string, v reflect.Value, i int, field reflect.StructField) (string, error) {
-	fieldValue := fmt.Sprintf("%v", reflect.ValueOf(v.Field(i)))
+// sanitizeString sanitize field based on the given struct tag(xss, domain, url, uri)
+func (st *StructSanitizer) sanitizeString(tagValue string, fieldValue string) (string, error) {
 
 	// Sanitize Html
 	if tagValue == htmlField {

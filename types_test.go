@@ -29,7 +29,8 @@ var (
 	uriTestBitcoin        = "bitcoin:1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2"
 	uriTest1              = "josh:jimenez"
 
-	URLTest = "https://www.example.com/index.html?query=example#section1"
+	URLTest         = "https://www.example.com/index.html?query=example#section1"
+	URLTestExpected = "https://example.com/index.html?query=example#section1"
 
 	XSSTest = "<script>alert(\"Hello, world!\");</script>"
 )
@@ -111,6 +112,14 @@ func TestAlphaNumeric(t *testing.T) {
 				spaces: true,
 			},
 			want: lowerLetters + upperLetters + numbers,
+		},
+		{
+			name: "Test without spaces",
+			args: args{
+				input:  lowerLetters + " " + numbers + " " + upperLetters,
+				spaces: false,
+			},
+			want: lowerLetters + numbers + upperLetters,
 		},
 	}
 	for _, tt := range tests {
@@ -271,6 +280,20 @@ func TestXSS(t *testing.T) {
 			},
 			want: lowerLetters + upperLetters,
 		},
+		{
+			name: "Test mixed case XSS eval and javascript:",
+			args: args{
+				input: `jAvAsCrIpT:alert(1); EvAl(some); FrOmChArCoDe;`,
+			},
+			want: `alert(1); some); ;`,
+		},
+		{
+			name: "Test HTML entities for brackets",
+			args: args{
+				input: `&#60;script&#62; &lt;script&gt;`,
+			},
+			want: `script script`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -367,24 +390,60 @@ func TestURI(t *testing.T) {
 // Need to test for unknown URLs
 func TestURL(t *testing.T) {
 	type args struct {
-		input string
+		input     string
+		removeWww bool
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
-			name: "Test URL",
+			name: "Test URL with removeWww true",
 			args: args{
-				input: URLTest,
+				input:     URLTest,
+				removeWww: true,
 			},
-			want: URLTest,
+			want:    URLTestExpected,
+			wantErr: false,
+		},
+		{
+			name: "Test URL with removeWww false",
+			args: args{
+				input:     URLTest,
+				removeWww: false,
+			},
+			want:    URLTest,
+			wantErr: false,
+		},
+		{
+			name: "Test URL invalid parsing (control characters)",
+			args: args{
+				input:     "http://\x00invalid",
+				removeWww: false,
+			},
+			want:    "http://\x00invalid",
+			wantErr: true,
+		},
+		{
+			name: "Test URL missing protocol",
+			args: args{
+				input:     "www.github.com",
+				removeWww: true,
+			},
+			want:    "https://github.com",
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := URL(tt.args.input, true); got != tt.want {
+			got, err := URL(tt.args.input, tt.args.removeWww)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("URL() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
 				t.Errorf("URL() = %v, want %v", got, tt.want)
 			}
 		})

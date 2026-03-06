@@ -11,13 +11,15 @@ var (
 	htmlRegex                   = regexp.MustCompile(`<[^>]*>`)        // html/xml tags or any alligator open/close tags
 	wwwRegex                    = regexp.MustCompile(`(?i)www.`)       // removing www
 
-	urlRegex = regexp.MustCompile(`/^(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*(?:\:\d+)?(?:\/\S*)?$/`) // url allowed characters and prevent attacks
+	urlRegex = regexp.MustCompile(`^(?:https?://)?(?:www\.)?[a-zA-Z0-9_-]+(?:\.[a-zA-Z0-9_-]+)*(?::\d+)?(?:/\S*)?$`) // url allowed characters and prevent attacks
 
 	uriRegex = regexp.MustCompile(`[^:/?#\[\]@!$&'()*+,;=a-zA-Z0-9_~.%-]+`) // uri allowed characters
 
 	scriptsRegex = regexp.MustCompile(`(?i)<(script|iframe|embed|object)[^>]*>.*</(script|iframe|embed|object)>`) // Harmful script tags
 
-	// harmfulRegex = regexp.MustCompile(`(?i)\b(eval|fromCharCode|expression)\s*\(`) // javaScript functions we want to remove
+	xssEvalRegex          = regexp.MustCompile(`(?i)eval[\(\&]`)
+	xssJavascriptRegex    = regexp.MustCompile(`(?i)javascript[\:\&]`)
+	xssFromCharCodeRegex  = regexp.MustCompile(`(?i)fromCharCode`)
 
 	emptySpace = ""
 

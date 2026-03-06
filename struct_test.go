@@ -13,15 +13,22 @@ type Address struct {
 }
 
 type Payload struct {
-	FirstName string  `json:"first_name" sanitize:"xss"`
-	LastName  string  `json:"last_name" sanitize:"scripts"`
-	Age       int     `json:"age"`
-	Website   string  `json:"website"  sanitize:"url"`
-	Username  string  `json:"username" sanitize:"uri"`
-	Address   Address `json:"address"`
-	Active    *bool   `json:"active"`
-	LockedBy  *uint8  `json:"locked_by"`
+	FirstName string   `json:"first_name" sanitize:"xss"`
+	LastName  string   `json:"last_name" sanitize:"scripts"`
+	Age       int      `json:"age"`
+	Website   string   `json:"website"  sanitize:"url"`
+	Username  string   `json:"username" sanitize:"uri"`
+	Address   Address  `json:"address"`
+	Active    *bool    `json:"active"`
+	LockedBy  *uint8   `json:"locked_by"`
+	Tags      []string `json:"tags" sanitize:"xss"`
+	Comments  []string `json:"comments" sanitize:"html"`
+	Escape    string   `json:"escape" sanitize:"html_escape"`
+	Alpha     string   `json:"alpha" sanitize:"alpha"`
+	AlphaNum  string   `json:"alpha_num" sanitize:"alphanumeric"`
 }
+
+type EmptyStruct struct{}
 
 func TestStruct(t *testing.T) {
 	var active = true
@@ -43,6 +50,17 @@ func TestStruct(t *testing.T) {
 		},
 		Active:   &active,
 		LockedBy: &lockedBy,
+		Tags: []string{
+			`first<script>alert(1)</script>`,
+			`second<a href="javascript:alert(1)">link</a>`,
+		},
+		Comments: []string{
+			`hello <b>world</b>`,
+			`test <embed src="bad"></embed>`,
+		},
+		Escape:   `<h1>Escape me!</h1>`,
+		Alpha:    "Just letters 123",
+		AlphaNum: "Letters and 123 !@#",
 	}
 
 	type args struct {
@@ -62,11 +80,61 @@ func TestStruct(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "Testing non-pointer struct",
+			args: args{
+				tagName: "sanitize",
+				any:     *payload,
+			},
+			wantErr: true,
+		},
+		{
+			name: "Testing empty struct",
+			args: args{
+				tagName: "sanitize",
+				any:     &EmptyStruct{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Testing invalid URL property",
+			args: args{
+				tagName: "sanitize",
+				any: &Payload{
+					Website: "http://\x00invalid",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Testing nested slice invalid URL property",
+			args: args{
+				tagName: "sanitize",
+				any: &struct {
+					Urls []string `sanitize:"url"`
+				}{
+					Urls: []string{"http://\x00invalid"},
+				},
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Struct(tt.args.tagName, tt.args.any); (err != nil) != tt.wantErr {
-				t.Errorf("Struct() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.name == "Testing struct" {
+				// Initialize verbose mode for coverage
+				ret := StructSanitizer{verbose: true, tagName: tt.args.tagName}
+				if err := ret.SanitizeStruct(tt.args.any); (err != nil) != tt.wantErr {
+					t.Errorf("Struct() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			} else {
+				if err := Struct(tt.args.tagName, tt.args.any); (err != nil) != tt.wantErr {
+					t.Errorf("Struct() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}
+
+			if tt.wantErr {
+				return
 			}
 
 			// Check for the First name
@@ -107,6 +175,31 @@ func TestStruct(t *testing.T) {
 			// Check for Zipcode
 			if payload.Address.ZipCode != "SW1W 0NY" {
 				t.Errorf("ZipCode sanitize error = %v", payload.Address.ZipCode)
+			}
+
+			// Check for Tags (Slice xss sanitize)
+			if len(payload.Tags) != 2 || payload.Tags[0] != "first" || payload.Tags[1] != "secondlink" {
+				t.Errorf("Tags sanitize error = %v", payload.Tags)
+			}
+
+			// Check for Comments (Slice html sanitize)
+			if len(payload.Comments) != 2 || payload.Comments[0] != "hello world" || payload.Comments[1] != "test " {
+				t.Errorf("Comments sanitize error = %v", payload.Comments)
+			}
+
+			// Check for Escape
+			if payload.Escape != "&lt;h1&gt;Escape me!&lt;/h1&gt;" {
+				t.Errorf("Escape sanitize error = %v", payload.Escape)
+			}
+
+			// Check for Alpha
+			if payload.Alpha != "Just letters " {
+				t.Errorf("Alpha sanitize error = %v", payload.Alpha)
+			}
+
+			// Check for AlphaNumeric
+			if payload.AlphaNum != "Letters and 123 " {
+				t.Errorf("AlphaNum sanitize error = %v", payload.AlphaNum)
 			}
 
 			// fmt.Printf("%+v", payload)
