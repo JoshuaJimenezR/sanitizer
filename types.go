@@ -88,5 +88,6 @@ func XSS(input string) string {
 	input = strings.Replace(input, "&#60;", "", -1)
 	input = strings.Replace(input, "&lt;", "", -1)
 	input = strings.Replace(input, "&rt;", "", -1)
+	input = HTML(input)
 	return input
 }
