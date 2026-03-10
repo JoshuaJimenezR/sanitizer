@@ -23,9 +23,11 @@ type Payload struct {
 	LockedBy  *uint8   `json:"locked_by"`
 	Tags      []string `json:"tags" sanitize:"xss"`
 	Comments  []string `json:"comments" sanitize:"html"`
-	Escape    string   `json:"escape" sanitize:"html_escape"`
-	Alpha     string   `json:"alpha" sanitize:"alpha"`
-	AlphaNum  string   `json:"alpha_num" sanitize:"alphanumeric"`
+	Escape    string    `json:"escape" sanitize:"html_escape"`
+	Alpha     string    `json:"alpha" sanitize:"alpha"`
+	AlphaNum  string    `json:"alpha_num" sanitize:"alphanumeric"`
+	PtrString *string   `json:"ptr_string" sanitize:"html"`
+	PtrSlice  []*string `json:"ptr_slice" sanitize:"html"`
 }
 
 type EmptyStruct struct{}
@@ -33,6 +35,9 @@ type EmptyStruct struct{}
 func TestStruct(t *testing.T) {
 	var active = true
 	var lockedBy uint8 = 1
+	var ptrStr = `hello <b>world</b>`
+	var ptrSliceStr1 = `first <script>alert(1)</script> html`
+	var ptrSliceStr2 = `second <b>HTML</b> value`
 
 	// Payload Example
 	payload := &Payload{
@@ -58,9 +63,11 @@ func TestStruct(t *testing.T) {
 			`hello <b>world</b>`,
 			`test <embed src="bad"></embed>`,
 		},
-		Escape:   `<h1>Escape me!</h1>`,
-		Alpha:    "Just letters 123",
-		AlphaNum: "Letters and 123 !@#",
+		Escape:    `<h1>Escape me!</h1>`,
+		Alpha:     "Just letters 123",
+		AlphaNum:  "Letters and 123 !@#",
+		PtrString: &ptrStr,
+		PtrSlice:  []*string{&ptrSliceStr1, &ptrSliceStr2},
 	}
 
 	type args struct {
@@ -200,6 +207,16 @@ func TestStruct(t *testing.T) {
 			// Check for AlphaNumeric
 			if payload.AlphaNum != "Letters and 123 " {
 				t.Errorf("AlphaNum sanitize error = %v", payload.AlphaNum)
+			}
+
+			// Check for PtrString
+			if *payload.PtrString != "hello world" {
+				t.Errorf("PtrString sanitize error = %v", *payload.PtrString)
+			}
+
+			// Check for PtrSlice
+			if len(payload.PtrSlice) != 2 || *payload.PtrSlice[0] != "first alert(1) html" || *payload.PtrSlice[1] != "second HTML value" {
+				t.Errorf("PtrSlice sanitize error, 0:%v 1:%v", *payload.PtrSlice[0], *payload.PtrSlice[1])
 			}
 
 			// fmt.Printf("%+v", payload)

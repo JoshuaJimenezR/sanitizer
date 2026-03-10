@@ -71,9 +71,24 @@ func (st *StructSanitizer) readStruct(v reflect.Value) error {
 		if v.Field(i).Kind() == reflect.Ptr {
 			element := v.Field(i).Elem()
 
-			if !v.Field(i).IsNil() && element.Kind() == reflect.Struct {
-				if err := st.readStruct(element); err != nil {
-					return err
+			if !v.Field(i).IsNil() {
+				if element.Kind() == reflect.Struct {
+					if err := st.readStruct(element); err != nil {
+						return err
+					}
+				} else if element.Kind() == reflect.String {
+					if tagValue != "" {
+						if st.verbose {
+							fmt.Printf("Field Name: %s, Field Value: %s, Field Sanitization Tag: %s \n", field.Name, element.Interface(), tagValue)
+						}
+						fieldValue, err := st.sanitizeString(tagValue, element.String())
+						if err != nil {
+							return err
+						}
+						if element.CanSet() {
+							element.SetString(fieldValue)
+						}
+					}
 				}
 			}
 			continue
@@ -112,9 +127,24 @@ func (st *StructSanitizer) readSlice(v reflect.Value, tagValue string) error {
 		element := v.Index(j)
 
 		if element.Kind() == reflect.Ptr {
-			if !element.IsNil() && element.Elem().Kind() == reflect.Struct {
-				if err := st.readStruct(element.Elem()); err != nil {
-					return err
+			if !element.IsNil() {
+				if element.Elem().Kind() == reflect.Struct {
+					if err := st.readStruct(element.Elem()); err != nil {
+						return err
+					}
+				} else if element.Elem().Kind() == reflect.String {
+					if tagValue != "" {
+						if st.verbose {
+							fmt.Printf("Slice Element Sanitization Tag: %s \n", tagValue)
+						}
+						fieldValue, err := st.sanitizeString(tagValue, element.Elem().String())
+						if err != nil {
+							return err
+						}
+						if element.Elem().CanSet() {
+							element.Elem().SetString(fieldValue)
+						}
+					}
 				}
 			}
 		} else if element.Kind() == reflect.Struct {
